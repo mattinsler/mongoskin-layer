@@ -24,7 +24,7 @@ create_models = (app) ->
         require(file_path)
       catch err
         err.message = 'Error in ' + file_path + ': ' + err.message
-        return callback(err)
+        return done(err)
 
     read_dir(app.path.models)
     done()
