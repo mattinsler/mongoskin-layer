@@ -169,7 +169,7 @@
         opts = opts;
       }
       d = q.defer();
-      this.__collection__.save(obj, opts, promise_me(d, callback));
+      this.__collection__.save(obj, opts, wrap_model(this, promise_me(d, callback)));
       return d.promise;
     };
 

@@ -87,7 +87,7 @@ class Model
       opts = opts
 
     d = q.defer()
-    @__collection__.save(obj, opts, promise_me(d, callback))
+    @__collection__.save(obj, opts,wrap_model(@, promise_me(d, callback)))
     d.promise
   
   @update: (query, update, opts, callback) -> @where(query).update(update, opts, callback)
