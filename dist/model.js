@@ -162,7 +162,7 @@
       return (_ref = this.where()).limit.apply(_ref, arguments);
     };
 
-    Model.create = function(obj, opts, callback) {
+    Model.save = function(obj, opts, callback) {
       var d;
       if (typeof opts === 'function') {
         callback = opts;

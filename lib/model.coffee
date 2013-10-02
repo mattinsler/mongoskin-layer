@@ -81,7 +81,7 @@ class Model
   @skip: -> @where().skip(arguments...)
   @limit: -> @where().limit(arguments...)
 
-  @create: (obj, opts, callback) ->
+  @save: (obj, opts, callback) ->
     if typeof opts is 'function'
       callback = opts
       opts = opts
@@ -89,7 +89,7 @@ class Model
     d = q.defer()
     @__collection__.save(obj, opts, promise_me(d, callback))
     d.promise
-
+  
   @update: (query, update, opts, callback) -> @where(query).update(update, opts, callback)
 
 Model.__promise_me = promise_me
