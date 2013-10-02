@@ -2,7 +2,7 @@ fs = require 'fs'
 path = require 'path'
 
 module.exports = (app) ->
-  app.sequence('models').add('mongoskin', add_mongoskin.bind(app))
+  app.sequence('models').add('mongoskin', add_mongoskin(app))
   app.sequence('models').add('create-models', create_models(app))
   
   app.path.models ?= path.join(app.path.app, 'models')
@@ -10,7 +10,7 @@ module.exports = (app) ->
   app.models ?= {}
 
 create_models = (app) ->
-  (callback) ->
+  (done) ->
     read_dir = (dir) ->
       return unless fs.existsSync(dir)
 
@@ -27,10 +27,11 @@ create_models = (app) ->
         return callback(err)
 
     read_dir(app.path.models)
+    done()
 
 add_mongoskin = (app) ->
-  (callback) ->
-    return callback() unless app.config.mongodb?
+  (done) ->
+    return done() unless app.config.mongodb?
   
     mongoskin = null
   
@@ -39,11 +40,11 @@ add_mongoskin = (app) ->
     catch err
       if err.code is 'MODULE_NOT_FOUND'
         console.log "Looks like you don't have mongoskin installed yet.\nYou should run\n\nnpm install --save mongoskin\n\nin your project directory."
-        return callback(err)
-      callback(err)
+        return done(err)
+      done(err)
   
-    app.Model = require './model'
     app.mongoskin = {connection: mongoskin.db(app.config.mongodb.url)}
+    app.Model = require './model'
   
     ['connect', 'disconnect', 'open', 'close', 'error'].forEach (evt) =>
       app.mongoskin.connection.on evt, -> console.log evt, arguments
@@ -53,6 +54,6 @@ add_mongoskin = (app) ->
       console.log(err.stack)
   
     console.log 'waiting for mongoskin connection...'
-    return callback() if app.mongoskin.connection.state is require('mongoskin/lib/mongoskin/constant').STATE_OPEN
-    # @mongoskin.connection.on('open', callback)
-    callback()
+    return done() if app.mongoskin.connection.state is require('mongoskin/lib/mongoskin/constant').STATE_OPEN
+    # @mongoskin.connection.on('open', done)
+    done()

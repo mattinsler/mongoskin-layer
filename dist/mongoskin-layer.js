@@ -7,7 +7,7 @@
 
   module.exports = function(app) {
     var _base, _ref, _ref1;
-    app.sequence('models').add('mongoskin', add_mongoskin.bind(app));
+    app.sequence('models').add('mongoskin', add_mongoskin(app));
     app.sequence('models').add('create-models', create_models(app));
     if ((_ref = (_base = app.path).models) == null) {
       _base.models = path.join(app.path.app, 'models');
@@ -16,7 +16,7 @@
   };
 
   create_models = function(app) {
-    return function(callback) {
+    return function(done) {
       var read_dir, read_file;
       read_dir = function(dir) {
         var file_path, filename, _i, _len, _ref, _ref1;
@@ -41,16 +41,17 @@
           return callback(err);
         }
       };
-      return read_dir(app.path.models);
+      read_dir(app.path.models);
+      return done();
     };
   };
 
   add_mongoskin = function(app) {
-    return function(callback) {
+    return function(done) {
       var mongoskin,
         _this = this;
       if (app.config.mongodb == null) {
-        return callback();
+        return done();
       }
       mongoskin = null;
       try {
@@ -58,14 +59,14 @@
       } catch (err) {
         if (err.code === 'MODULE_NOT_FOUND') {
           console.log("Looks like you don't have mongoskin installed yet.\nYou should run\n\nnpm install --save mongoskin\n\nin your project directory.");
-          return callback(err);
+          return done(err);
         }
-        callback(err);
+        done(err);
       }
-      app.Model = require('./model');
       app.mongoskin = {
         connection: mongoskin.db(app.config.mongodb.url)
       };
+      app.Model = require('./model');
       ['connect', 'disconnect', 'open', 'close', 'error'].forEach(function(evt) {
         return app.mongoskin.connection.on(evt, function() {
           return console.log(evt, arguments);
@@ -77,9 +78,9 @@
       });
       console.log('waiting for mongoskin connection...');
       if (app.mongoskin.connection.state === require('mongoskin/lib/mongoskin/constant').STATE_OPEN) {
-        return callback();
+        return done();
       }
-      return callback();
+      return done();
     };
   };
 
