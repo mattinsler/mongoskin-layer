@@ -53,10 +53,19 @@ class Query
   update: (update, opts, callback) ->
     if typeof opts is 'function'
       callback = opts
-      opts = opts
+      opts = {}
     
     d = q.defer()
     @model.__collection__.update(@query, update, opts, promise_me(d, callback))
+    d.promise
+  
+  remove: (opts, callback) ->
+    if typeof opts is 'function'
+      callback = opts
+      opts = {}
+    
+    d = q.defer()
+    @model.__collection__.remove(@query, opts, promise_me(d, callback))
     d.promise
 
 
@@ -84,13 +93,14 @@ class Model
   @save: (obj, opts, callback) ->
     if typeof opts is 'function'
       callback = opts
-      opts = opts
+      opts = {}
 
     d = q.defer()
     @__collection__.save(obj, opts,wrap_model(@, promise_me(d, callback)))
     d.promise
   
   @update: (query, update, opts, callback) -> @where(query).update(update, opts, callback)
+  @remove: (query, opts, callback) -> @where(query).remove(opts, callback)
 
 Model.__promise_me = promise_me
 Model.ObjectID = APP.mongoskin.connection.ObjectID

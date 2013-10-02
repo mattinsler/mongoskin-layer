@@ -89,10 +89,21 @@
       var d;
       if (typeof opts === 'function') {
         callback = opts;
-        opts = opts;
+        opts = {};
       }
       d = q.defer();
       this.model.__collection__.update(this.query, update, opts, promise_me(d, callback));
+      return d.promise;
+    };
+
+    Query.prototype.remove = function(opts, callback) {
+      var d;
+      if (typeof opts === 'function') {
+        callback = opts;
+        opts = {};
+      }
+      d = q.defer();
+      this.model.__collection__.remove(this.query, opts, promise_me(d, callback));
       return d.promise;
     };
 
@@ -166,7 +177,7 @@
       var d;
       if (typeof opts === 'function') {
         callback = opts;
-        opts = opts;
+        opts = {};
       }
       d = q.defer();
       this.__collection__.save(obj, opts, wrap_model(this, promise_me(d, callback)));
@@ -175,6 +186,10 @@
 
     Model.update = function(query, update, opts, callback) {
       return this.where(query).update(update, opts, callback);
+    };
+
+    Model.remove = function(query, opts, callback) {
+      return this.where(query).remove(opts, callback);
     };
 
     return Model;
