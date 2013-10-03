@@ -112,7 +112,7 @@
         obj[k] = v;
       }
       d = q.defer();
-      this.__collection__.save(obj, opts, wrap_model(this, promise_me(d, callback)));
+      this.model.__collection__.save(obj, opts, wrap_model(this.model, promise_me(d, callback)));
       return d.promise;
     };
 

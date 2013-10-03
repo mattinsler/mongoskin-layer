@@ -70,7 +70,7 @@ class Query
     obj[k] = v for k, v of @query
 
     d = q.defer()
-    @__collection__.save(obj, opts,wrap_model(@, promise_me(d, callback)))
+    @model.__collection__.save(obj, opts,wrap_model(@model, promise_me(d, callback)))
     d.promise
   
   update: (update, opts, callback) ->
