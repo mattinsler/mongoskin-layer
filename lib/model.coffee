@@ -31,6 +31,14 @@ class Query
     @opts.sort = sort
     @
   
+  skip: (skip) ->
+    @opts.skip = skip
+    @
+  
+  limit: (limit) ->
+    @opts.limit = limit
+    @
+  
   fields: (fields) ->
     @opts.fields = fields
     @
@@ -50,6 +58,21 @@ class Query
     @model.__collection__.count(@query, promise_me(d, callback))
     d.promise
   
+  save: (obj, opts, callback) ->
+    if typeof obj is 'function'
+      callback = obj
+      opts = {}
+      obj = {}
+    if typeof opts is 'function'
+      callback = opts
+      opts = {}
+
+    obj[k] = v for k, v of @query
+
+    d = q.defer()
+    @__collection__.save(obj, opts,wrap_model(@, promise_me(d, callback)))
+    d.promise
+  
   update: (update, opts, callback) ->
     if typeof opts is 'function'
       callback = opts
@@ -67,7 +90,7 @@ class Query
     d = q.defer()
     @model.__collection__.remove(@query, opts, promise_me(d, callback))
     d.promise
-
+  
 
 class Model
   constructor: (data) ->
@@ -83,22 +106,17 @@ class Model
     @[k] = v for k, v of data
   
   @where: -> new Query(@).where(arguments...)
-  @first: -> @where().first(arguments...)
-  @array: -> @where().array(arguments...)
-  @count: -> @where().count(arguments...)
+  
   @sort: -> @where().sort(arguments...)
   @skip: -> @where().skip(arguments...)
   @limit: -> @where().limit(arguments...)
-
-  @save: (obj, opts, callback) ->
-    if typeof opts is 'function'
-      callback = opts
-      opts = {}
-
-    d = q.defer()
-    @__collection__.save(obj, opts,wrap_model(@, promise_me(d, callback)))
-    d.promise
+  @fields: -> @where().fields(arguments...)
   
+  @first: -> @where().first(arguments...)
+  @array: -> @where().array(arguments...)
+  @count: -> @where().count(arguments...)
+  
+  @save: (obj, opts, callback) -> @where().save(obj, opts, callback)
   @update: (query, update, opts, callback) -> @where(query).update(update, opts, callback)
   @remove: (query, opts, callback) -> @where(query).remove(opts, callback)
 

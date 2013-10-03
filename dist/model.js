@@ -59,6 +59,16 @@
       return this;
     };
 
+    Query.prototype.skip = function(skip) {
+      this.opts.skip = skip;
+      return this;
+    };
+
+    Query.prototype.limit = function(limit) {
+      this.opts.limit = limit;
+      return this;
+    };
+
     Query.prototype.fields = function(fields) {
       this.opts.fields = fields;
       return this;
@@ -82,6 +92,27 @@
       var d;
       d = q.defer();
       this.model.__collection__.count(this.query, promise_me(d, callback));
+      return d.promise;
+    };
+
+    Query.prototype.save = function(obj, opts, callback) {
+      var d, k, v, _ref;
+      if (typeof obj === 'function') {
+        callback = obj;
+        opts = {};
+        obj = {};
+      }
+      if (typeof opts === 'function') {
+        callback = opts;
+        opts = {};
+      }
+      _ref = this.query;
+      for (k in _ref) {
+        v = _ref[k];
+        obj[k] = v;
+      }
+      d = q.defer();
+      this.__collection__.save(obj, opts, wrap_model(this, promise_me(d, callback)));
       return d.promise;
     };
 
@@ -143,21 +174,6 @@
       return (_ref = new Query(this)).where.apply(_ref, arguments);
     };
 
-    Model.first = function() {
-      var _ref;
-      return (_ref = this.where()).first.apply(_ref, arguments);
-    };
-
-    Model.array = function() {
-      var _ref;
-      return (_ref = this.where()).array.apply(_ref, arguments);
-    };
-
-    Model.count = function() {
-      var _ref;
-      return (_ref = this.where()).count.apply(_ref, arguments);
-    };
-
     Model.sort = function() {
       var _ref;
       return (_ref = this.where()).sort.apply(_ref, arguments);
@@ -173,15 +189,28 @@
       return (_ref = this.where()).limit.apply(_ref, arguments);
     };
 
+    Model.fields = function() {
+      var _ref;
+      return (_ref = this.where()).fields.apply(_ref, arguments);
+    };
+
+    Model.first = function() {
+      var _ref;
+      return (_ref = this.where()).first.apply(_ref, arguments);
+    };
+
+    Model.array = function() {
+      var _ref;
+      return (_ref = this.where()).array.apply(_ref, arguments);
+    };
+
+    Model.count = function() {
+      var _ref;
+      return (_ref = this.where()).count.apply(_ref, arguments);
+    };
+
     Model.save = function(obj, opts, callback) {
-      var d;
-      if (typeof opts === 'function') {
-        callback = opts;
-        opts = {};
-      }
-      d = q.defer();
-      this.__collection__.save(obj, opts, wrap_model(this, promise_me(d, callback)));
-      return d.promise;
+      return this.where().save(obj, opts, callback);
     };
 
     Model.update = function(query, update, opts, callback) {
