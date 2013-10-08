@@ -119,6 +119,15 @@ class Model
   @save: (obj, opts, callback) -> @where().save(obj, opts, callback)
   @update: (query, update, opts, callback) -> @where(query).update(update, opts, callback)
   @remove: (query, opts, callback) -> @where(query).remove(opts, callback)
+  
+  @find_and_modify: (query, sort, update, opts, callback) ->
+    if typeof opts is 'function'
+      callback = opts
+      opts = {}
+    
+    d = q.defer()
+    @__collection__.findAndModify(query, sort, update, opts, promise_me(d, callback))
+    d.promise
 
 Model.__promise_me = promise_me
 Model.ObjectID = APP.mongoskin.connection.ObjectID

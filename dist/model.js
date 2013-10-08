@@ -221,6 +221,17 @@
       return this.where(query).remove(opts, callback);
     };
 
+    Model.find_and_modify = function(query, sort, update, opts, callback) {
+      var d;
+      if (typeof opts === 'function') {
+        callback = opts;
+        opts = {};
+      }
+      d = q.defer();
+      this.__collection__.findAndModify(query, sort, update, opts, promise_me(d, callback));
+      return d.promise;
+    };
+
     return Model;
 
   })();
