@@ -66,11 +66,13 @@ class Query
     if typeof opts is 'function'
       callback = opts
       opts = {}
-
-    obj[k] = v for k, v of @query
+    
+    save_obj = {}
+    save_obj[k] = v for k, v of obj when not Object.getOwnPropertyDescriptor(obj, k).get?
+    save_obj[k] = v for k, v of @query when not Object.getOwnPropertyDescriptor(@query, k).get?
 
     d = q.defer()
-    @model.__collection__.save(obj, opts,wrap_model(@model, promise_me(d, callback)))
+    @model.__collection__.save(save_obj, opts,wrap_model(@model, promise_me(d, callback)))
     d.promise
   
   update: (update, opts, callback) ->

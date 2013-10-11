@@ -96,7 +96,7 @@
     };
 
     Query.prototype.save = function(obj, opts, callback) {
-      var d, k, v, _ref;
+      var d, k, save_obj, v, _ref;
       if (typeof obj === 'function') {
         callback = obj;
         opts = {};
@@ -106,13 +106,22 @@
         callback = opts;
         opts = {};
       }
+      save_obj = {};
+      for (k in obj) {
+        v = obj[k];
+        if (!(Object.getOwnPropertyDescriptor(obj, k).get != null)) {
+          save_obj[k] = v;
+        }
+      }
       _ref = this.query;
       for (k in _ref) {
         v = _ref[k];
-        obj[k] = v;
+        if (!(Object.getOwnPropertyDescriptor(this.query, k).get != null)) {
+          save_obj[k] = v;
+        }
       }
       d = q.defer();
-      this.model.__collection__.save(obj, opts, wrap_model(this.model, promise_me(d, callback)));
+      this.model.__collection__.save(save_obj, opts, wrap_model(this.model, promise_me(d, callback)));
       return d.promise;
     };
 
