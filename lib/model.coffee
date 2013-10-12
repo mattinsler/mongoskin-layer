@@ -110,7 +110,7 @@ class Model.Query
     @model.__collection__.find(@query, @opts).toArray(Model.wrap_callback(@model, callback))
   
   count: Model.defer (callback) ->
-    @model.__collection__.count(@query, promise_me(d, callback))
+    @model.__collection__.count(@query, callback)
   
   save: Model.defer (obj, opts, callback) ->
     if typeof obj is 'function'
@@ -132,17 +132,15 @@ class Model.Query
       callback = opts
       opts = {}
     
-    @model.__collection__.update(@query, update, opts, promise_me(d, callback))
+    @model.__collection__.update(@query, update, opts, callback)
   
   remove: Model.defer (opts, callback) ->
     if typeof opts is 'function'
       callback = opts
       opts = {}
     
-    @model.__collection__.remove(@query, opts, promise_me(d, callback))
+    @model.__collection__.remove(@query, opts, callback)
 
 
-
-Model.__promise_me = promise_me
 Model.ObjectID = APP.mongoskin.connection.ObjectID
 module.exports = Model

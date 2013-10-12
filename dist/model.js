@@ -215,7 +215,7 @@
     });
 
     Query.prototype.count = Model.defer(function(callback) {
-      return this.model.__collection__.count(this.query, promise_me(d, callback));
+      return this.model.__collection__.count(this.query, callback);
     });
 
     Query.prototype.save = Model.defer(function(obj, opts, callback) {
@@ -251,7 +251,7 @@
         callback = opts;
         opts = {};
       }
-      return this.model.__collection__.update(this.query, update, opts, promise_me(d, callback));
+      return this.model.__collection__.update(this.query, update, opts, callback);
     });
 
     Query.prototype.remove = Model.defer(function(opts, callback) {
@@ -259,14 +259,12 @@
         callback = opts;
         opts = {};
       }
-      return this.model.__collection__.remove(this.query, opts, promise_me(d, callback));
+      return this.model.__collection__.remove(this.query, opts, callback);
     });
 
     return Query;
 
   })();
-
-  Model.__promise_me = promise_me;
 
   Model.ObjectID = APP.mongoskin.connection.ObjectID;
 
