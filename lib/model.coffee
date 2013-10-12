@@ -107,8 +107,8 @@ class Model
   @wrap_callback: (model, callback) ->
     wrapper = Model.wrapper(model)
     (err, data) ->
-      return callback(err) if err?
-      callback(null, wrapper(data))
+      return callback?(err) if err?
+      callback?(null, wrapper(data))
 
   @defer: (method) ->
     ->

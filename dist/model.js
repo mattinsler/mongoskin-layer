@@ -180,9 +180,9 @@
       wrapper = Model.wrapper(model);
       return function(err, data) {
         if (err != null) {
-          return callback(err);
+          return typeof callback === "function" ? callback(err) : void 0;
         }
-        return callback(null, wrapper(data));
+        return typeof callback === "function" ? callback(null, wrapper(data)) : void 0;
       };
     };
 
