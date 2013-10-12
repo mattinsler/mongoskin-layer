@@ -1,7 +1,8 @@
 (function() {
-  var Model, Query, promise_me, q, wrap_model,
+  var Model, Query, promise_me, q,
     __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __slice = [].slice;
 
   q = require('q');
 
@@ -12,25 +13,6 @@
         return deferred.reject(err);
       }
       return deferred.resolve(data);
-    };
-  };
-
-  wrap_model = function(model, callback) {
-    return function(err, data) {
-      if (err != null) {
-        return callback(err);
-      }
-      if (data == null) {
-        return callback();
-      }
-      if (Array.isArray(data)) {
-        data = data.map(function(d) {
-          return new model(d);
-        });
-      } else {
-        data = new model(data);
-      }
-      return callback(null, data);
     };
   };
 
@@ -77,14 +59,14 @@
     Query.prototype.first = function(callback) {
       var d;
       d = q.defer();
-      this.model.__collection__.findOne(this.query, this.opts, wrap_model(this.model, promise_me(d, callback)));
+      this.model.__collection__.findOne(this.query, this.opts, Model.wrap_callback(this.model, callback));
       return d.promise;
     };
 
     Query.prototype.array = function(callback) {
       var d;
       d = q.defer();
-      this.model.__collection__.find(this.query, this.opts).toArray(wrap_model(this.model, promise_me(d, callback)));
+      this.model.__collection__.find(this.query, this.opts).toArray(Model.wrap_callback(this.model, callback));
       return d.promise;
     };
 
@@ -121,7 +103,7 @@
         }
       }
       d = q.defer();
-      this.model.__collection__.save(save_obj, opts, wrap_model(this.model, promise_me(d, callback)));
+      this.model.__collection__.save(save_obj, opts, Model.wrap_callback(this.model, callback));
       return d.promise;
     };
 
@@ -177,6 +159,61 @@
         this[k] = v;
       }
     }
+
+    Model.wrapper = function(model) {
+      return function(data) {
+        if (data == null) {
+          return null;
+        }
+        if (Array.isArray(data)) {
+          return data = data.map(function(d) {
+            return new model(d);
+          });
+        } else {
+          return new model(data);
+        }
+      };
+    };
+
+    Model.wrap_callback = function(model, callback) {
+      var wrapper;
+      wrapper = Model.wrapper(model);
+      return function(err, data) {
+        if (err != null) {
+          return callback(err);
+        }
+        return callback(null, wrapper(data));
+      };
+    };
+
+    Model.defer = function(method) {
+      return function() {
+        var args, callback, d, done, result;
+        d = q.defer();
+        args = Array.prototype.slice.call(arguments);
+        if (typeof args[args.length - 1] === 'function') {
+          callback = args.pop();
+        }
+        done = function() {
+          var err, results;
+          err = arguments[0], results = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+          if (err != null) {
+            d.reject(err);
+            if (typeof callback === "function") {
+              callback(err);
+            }
+            return;
+          }
+          d.resolve.apply(d, results);
+          return typeof callback === "function" ? callback.apply(null, [null].concat(__slice.call(results))) : void 0;
+        };
+        result = method.call.apply(method, [this].concat(__slice.call(args), [done]));
+        if (q.isPromise(result)) {
+          result.then(done.bind(null))["catch"](done);
+        }
+        return d.promise;
+      };
+    };
 
     Model.where = function() {
       var _ref;

@@ -7,17 +7,6 @@ promise_me = (deferred, callback) ->
     return deferred.reject(err) if err?
     deferred.resolve(data)
 
-wrap_model = (model, callback) ->
-  (err, data) ->
-    return callback(err) if err?
-    return callback() unless data?
-    if Array.isArray(data)
-      data = data.map (d) -> new model(d)
-    else
-      data = new model(data)
-    
-    callback(null, data)
-
 class Query
   constructor: (@model) ->
     @query = {}
@@ -45,12 +34,12 @@ class Query
   
   first: (callback) ->
     d = q.defer()
-    @model.__collection__.findOne(@query, @opts, wrap_model(@model, promise_me(d, callback)))
+    @model.__collection__.findOne(@query, @opts, Model.wrap_callback(@model, callback))
     d.promise
     
   array: (callback) ->
     d = q.defer()
-    @model.__collection__.find(@query, @opts).toArray(wrap_model(@model, promise_me(d, callback)))
+    @model.__collection__.find(@query, @opts).toArray(Model.wrap_callback(@model, callback))
     d.promise
   
   count: (callback) ->
@@ -72,7 +61,7 @@ class Query
     save_obj[k] = v for k, v of @query when not Object.getOwnPropertyDescriptor(@query, k).get?
 
     d = q.defer()
-    @model.__collection__.save(save_obj, opts,wrap_model(@model, promise_me(d, callback)))
+    @model.__collection__.save(save_obj, opts, Model.wrap_callback(@model, callback))
     d.promise
   
   update: (update, opts, callback) ->
@@ -106,6 +95,41 @@ class Model
       return CollectionModel
     
     @[k] = v for k, v of data
+  
+  @wrapper: (model) ->
+    (data) ->
+      return null unless data?
+      if Array.isArray(data)
+        data = data.map (d) -> new model(d)
+      else
+        new model(data)
+
+  @wrap_callback: (model, callback) ->
+    wrapper = Model.wrapper(model)
+    (err, data) ->
+      return callback(err) if err?
+      callback(null, wrapper(data))
+
+  @defer: (method) ->
+    ->
+      d = q.defer()
+      args = Array::slice.call(arguments)
+      callback = args.pop() if typeof args[args.length - 1] is 'function'
+
+      done = (err, results...) ->
+        if err?
+          d.reject(err)
+          callback?(err)
+          return
+
+        d.resolve(results...)
+        callback?(null, results...)
+
+      result = method.call(@, args..., done)
+      if q.isPromise(result)
+        result.then(done.bind(null)).catch(done)
+
+      d.promise
   
   @where: -> new Query(@).where(arguments...)
   
