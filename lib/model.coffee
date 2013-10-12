@@ -51,7 +51,15 @@ class Model
 
       result = method.call(@, args..., done)
       if q.isPromise(result)
-        result.then(done.bind(null)).catch(done)
+        console.log 'RETURNED PROMISE'
+        result.then (data) ->
+          console.log 'PROMISE.THEN', data
+          done(null, data)
+        .catch (err) ->
+          console.log 'PROMISE.CATCH', err
+          done(err)
+        
+        # result.then(done.bind(null)).catch(done)
 
       d.promise
 

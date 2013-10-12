@@ -92,7 +92,14 @@
         };
         result = method.call.apply(method, [this].concat(__slice.call(args), [done]));
         if (q.isPromise(result)) {
-          result.then(done.bind(null))["catch"](done);
+          console.log('RETURNED PROMISE');
+          result.then(function(data) {
+            console.log('PROMISE.THEN', data);
+            return done(null, data);
+          })["catch"](function(err) {
+            console.log('PROMISE.CATCH', err);
+            return done(err);
+          });
         }
         return d.promise;
       };
