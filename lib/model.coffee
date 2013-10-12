@@ -51,16 +51,9 @@ class Model
 
       result = method.call(@, args..., done)
       if q.isPromise(result)
-        console.log 'RETURNED PROMISE'
-        result.then (data) ->
-          console.log 'PROMISE.THEN', data
-          done(null, data)
-        .catch (err) ->
-          console.log 'PROMISE.CATCH', err
-          done(err)
-        
-        # result.then(done.bind(null)).catch(done)
-
+        result.then((data) -> done(null, data))
+        .catch((err) -> done(err))
+      
       d.promise
 
   @where: -> new @Query(@).where(arguments...)

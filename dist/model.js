@@ -92,12 +92,9 @@
         };
         result = method.call.apply(method, [this].concat(__slice.call(args), [done]));
         if (q.isPromise(result)) {
-          console.log('RETURNED PROMISE');
           result.then(function(data) {
-            console.log('PROMISE.THEN', data);
             return done(null, data);
           })["catch"](function(err) {
-            console.log('PROMISE.CATCH', err);
             return done(err);
           });
         }
