@@ -1,5 +1,5 @@
 (function() {
-  var Model, Query, promise_me, q,
+  var Model, promise_me, q,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice;
@@ -16,7 +16,153 @@
     };
   };
 
-  Query = (function() {
+  Model = (function() {
+
+    function Model(data) {
+      var CollectionModel, collection, k, v;
+      if (!(this instanceof Model)) {
+        CollectionModel = (function(_super) {
+
+          __extends(CollectionModel, _super);
+
+          function CollectionModel() {
+            return CollectionModel.__super__.constructor.apply(this, arguments);
+          }
+
+          return CollectionModel;
+
+        })(Model);
+        CollectionModel.collection_name = data;
+        collection = APP.mongoskin.connection.collection(CollectionModel.collection_name);
+        CollectionModel.prototype.__collection__ = CollectionModel.__collection__ = collection;
+        return CollectionModel;
+      }
+      for (k in data) {
+        v = data[k];
+        this[k] = v;
+      }
+    }
+
+    Model.wrapper = function(model) {
+      return function(data) {
+        if (data == null) {
+          return null;
+        }
+        if (Array.isArray(data)) {
+          return data = data.map(function(d) {
+            return new model(d);
+          });
+        } else {
+          return new model(data);
+        }
+      };
+    };
+
+    Model.wrap_callback = function(model, callback) {
+      var wrapper;
+      wrapper = Model.wrapper(model);
+      return function(err, data) {
+        if (err != null) {
+          return typeof callback === "function" ? callback(err) : void 0;
+        }
+        return typeof callback === "function" ? callback(null, wrapper(data)) : void 0;
+      };
+    };
+
+    Model.defer = function(method) {
+      return function() {
+        var args, callback, d, done, result;
+        d = q.defer();
+        args = Array.prototype.slice.call(arguments);
+        if (typeof args[args.length - 1] === 'function') {
+          callback = args.pop();
+        }
+        done = function() {
+          var err, results;
+          err = arguments[0], results = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+          if (err != null) {
+            d.reject(err);
+            if (typeof callback === "function") {
+              callback(err);
+            }
+            return;
+          }
+          d.resolve.apply(d, results);
+          return typeof callback === "function" ? callback.apply(null, [null].concat(__slice.call(results))) : void 0;
+        };
+        result = method.call.apply(method, [this].concat(__slice.call(args), [done]));
+        if (q.isPromise(result)) {
+          result.then(done.bind(null))["catch"](done);
+        }
+        return d.promise;
+      };
+    };
+
+    Model.where = function() {
+      var _ref;
+      return (_ref = new this.Query(this)).where.apply(_ref, arguments);
+    };
+
+    Model.sort = function() {
+      var _ref;
+      return (_ref = this.where()).sort.apply(_ref, arguments);
+    };
+
+    Model.skip = function() {
+      var _ref;
+      return (_ref = this.where()).skip.apply(_ref, arguments);
+    };
+
+    Model.limit = function() {
+      var _ref;
+      return (_ref = this.where()).limit.apply(_ref, arguments);
+    };
+
+    Model.fields = function() {
+      var _ref;
+      return (_ref = this.where()).fields.apply(_ref, arguments);
+    };
+
+    Model.first = function() {
+      var _ref;
+      return (_ref = this.where()).first.apply(_ref, arguments);
+    };
+
+    Model.array = function() {
+      var _ref;
+      return (_ref = this.where()).array.apply(_ref, arguments);
+    };
+
+    Model.count = function() {
+      var _ref;
+      return (_ref = this.where()).count.apply(_ref, arguments);
+    };
+
+    Model.save = function(obj, opts, callback) {
+      return this.where().save(obj, opts, callback);
+    };
+
+    Model.update = function(query, update, opts, callback) {
+      return this.where(query).update(update, opts, callback);
+    };
+
+    Model.remove = function(query, opts, callback) {
+      return this.where(query).remove(opts, callback);
+    };
+
+    Model.find_and_modify = Model.defer(function(query, sort, update, opts, callback) {
+      if (typeof opts === 'function') {
+        callback = opts;
+        opts = {};
+      }
+      return this.__collection__.findAndModify(query, sort, update, opts, promise_me(d, callback));
+    });
+
+    return Model;
+
+  })();
+
+  Model.Query = (function() {
 
     function Query(model) {
       this.model = model;
@@ -113,155 +259,6 @@
     });
 
     return Query;
-
-  })();
-
-  Model = (function() {
-
-    function Model(data) {
-      var CollectionModel, collection, k, v;
-      if (!(this instanceof Model)) {
-        CollectionModel = (function(_super) {
-
-          __extends(CollectionModel, _super);
-
-          function CollectionModel() {
-            return CollectionModel.__super__.constructor.apply(this, arguments);
-          }
-
-          return CollectionModel;
-
-        })(Model);
-        CollectionModel.collection_name = data;
-        collection = APP.mongoskin.connection.collection(CollectionModel.collection_name);
-        CollectionModel.prototype.__collection__ = CollectionModel.__collection__ = collection;
-        return CollectionModel;
-      }
-      for (k in data) {
-        v = data[k];
-        this[k] = v;
-      }
-    }
-
-    Model.wrapper = function(model) {
-      return function(data) {
-        if (data == null) {
-          return null;
-        }
-        if (Array.isArray(data)) {
-          return data = data.map(function(d) {
-            return new model(d);
-          });
-        } else {
-          return new model(data);
-        }
-      };
-    };
-
-    Model.wrap_callback = function(model, callback) {
-      var wrapper;
-      wrapper = Model.wrapper(model);
-      return function(err, data) {
-        if (err != null) {
-          return typeof callback === "function" ? callback(err) : void 0;
-        }
-        return typeof callback === "function" ? callback(null, wrapper(data)) : void 0;
-      };
-    };
-
-    Model.defer = function(method) {
-      return function() {
-        var args, callback, d, done, result;
-        d = q.defer();
-        args = Array.prototype.slice.call(arguments);
-        if (typeof args[args.length - 1] === 'function') {
-          callback = args.pop();
-        }
-        done = function() {
-          var err, results;
-          err = arguments[0], results = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-          if (err != null) {
-            d.reject(err);
-            if (typeof callback === "function") {
-              callback(err);
-            }
-            return;
-          }
-          d.resolve.apply(d, results);
-          return typeof callback === "function" ? callback.apply(null, [null].concat(__slice.call(results))) : void 0;
-        };
-        result = method.call.apply(method, [this].concat(__slice.call(args), [done]));
-        if (q.isPromise(result)) {
-          result.then(done.bind(null))["catch"](done);
-        }
-        return d.promise;
-      };
-    };
-
-    Model.where = function() {
-      var _ref;
-      return (_ref = new Query(this)).where.apply(_ref, arguments);
-    };
-
-    Model.sort = function() {
-      var _ref;
-      return (_ref = this.where()).sort.apply(_ref, arguments);
-    };
-
-    Model.skip = function() {
-      var _ref;
-      return (_ref = this.where()).skip.apply(_ref, arguments);
-    };
-
-    Model.limit = function() {
-      var _ref;
-      return (_ref = this.where()).limit.apply(_ref, arguments);
-    };
-
-    Model.fields = function() {
-      var _ref;
-      return (_ref = this.where()).fields.apply(_ref, arguments);
-    };
-
-    Model.first = function() {
-      var _ref;
-      return (_ref = this.where()).first.apply(_ref, arguments);
-    };
-
-    Model.array = function() {
-      var _ref;
-      return (_ref = this.where()).array.apply(_ref, arguments);
-    };
-
-    Model.count = function() {
-      var _ref;
-      return (_ref = this.where()).count.apply(_ref, arguments);
-    };
-
-    Model.save = function(obj, opts, callback) {
-      return this.where().save(obj, opts, callback);
-    };
-
-    Model.update = function(query, update, opts, callback) {
-      return this.where(query).update(update, opts, callback);
-    };
-
-    Model.remove = function(query, opts, callback) {
-      return this.where(query).remove(opts, callback);
-    };
-
-    Model.find_and_modify = function(query, sort, update, opts, callback) {
-      var d;
-      if (typeof opts === 'function') {
-        callback = opts;
-        opts = {};
-      }
-      d = q.defer();
-      this.__collection__.findAndModify(query, sort, update, opts, promise_me(d, callback));
-      return d.promise;
-    };
-
-    return Model;
 
   })();
 
