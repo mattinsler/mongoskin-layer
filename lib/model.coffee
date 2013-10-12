@@ -32,22 +32,16 @@ class Query
     @opts.fields = fields
     @
   
-  first: (callback) ->
-    d = q.defer()
+  first: Model.defer (callback) ->
     @model.__collection__.findOne(@query, @opts, Model.wrap_callback(@model, callback))
-    d.promise
     
-  array: (callback) ->
-    d = q.defer()
+  array: Model.defer (callback) ->
     @model.__collection__.find(@query, @opts).toArray(Model.wrap_callback(@model, callback))
-    d.promise
   
-  count: (callback) ->
-    d = q.defer()
+  count: Model.defer (callback) ->
     @model.__collection__.count(@query, promise_me(d, callback))
-    d.promise
   
-  save: (obj, opts, callback) ->
+  save: Model.defer (obj, opts, callback) ->
     if typeof obj is 'function'
       callback = obj
       opts = {}
@@ -59,29 +53,22 @@ class Query
     save_obj = {}
     save_obj[k] = v for k, v of obj when not Object.getOwnPropertyDescriptor(obj, k).get?
     save_obj[k] = v for k, v of @query when not Object.getOwnPropertyDescriptor(@query, k).get?
-
-    d = q.defer()
+    
     @model.__collection__.save(save_obj, opts, Model.wrap_callback(@model, callback))
-    d.promise
   
-  update: (update, opts, callback) ->
+  update: Model.defer (update, opts, callback) ->
     if typeof opts is 'function'
       callback = opts
       opts = {}
     
-    d = q.defer()
     @model.__collection__.update(@query, update, opts, promise_me(d, callback))
-    d.promise
   
-  remove: (opts, callback) ->
+  remove: Model.defer (opts, callback) ->
     if typeof opts is 'function'
       callback = opts
       opts = {}
     
-    d = q.defer()
     @model.__collection__.remove(@query, opts, promise_me(d, callback))
-    d.promise
-  
 
 class Model
   constructor: (data) ->

@@ -56,29 +56,20 @@
       return this;
     };
 
-    Query.prototype.first = function(callback) {
-      var d;
-      d = q.defer();
-      this.model.__collection__.findOne(this.query, this.opts, Model.wrap_callback(this.model, callback));
-      return d.promise;
-    };
+    Query.prototype.first = Model.defer(function(callback) {
+      return this.model.__collection__.findOne(this.query, this.opts, Model.wrap_callback(this.model, callback));
+    });
 
-    Query.prototype.array = function(callback) {
-      var d;
-      d = q.defer();
-      this.model.__collection__.find(this.query, this.opts).toArray(Model.wrap_callback(this.model, callback));
-      return d.promise;
-    };
+    Query.prototype.array = Model.defer(function(callback) {
+      return this.model.__collection__.find(this.query, this.opts).toArray(Model.wrap_callback(this.model, callback));
+    });
 
-    Query.prototype.count = function(callback) {
-      var d;
-      d = q.defer();
-      this.model.__collection__.count(this.query, promise_me(d, callback));
-      return d.promise;
-    };
+    Query.prototype.count = Model.defer(function(callback) {
+      return this.model.__collection__.count(this.query, promise_me(d, callback));
+    });
 
-    Query.prototype.save = function(obj, opts, callback) {
-      var d, k, save_obj, v, _ref;
+    Query.prototype.save = Model.defer(function(obj, opts, callback) {
+      var k, save_obj, v, _ref;
       if (typeof obj === 'function') {
         callback = obj;
         opts = {};
@@ -102,32 +93,24 @@
           save_obj[k] = v;
         }
       }
-      d = q.defer();
-      this.model.__collection__.save(save_obj, opts, Model.wrap_callback(this.model, callback));
-      return d.promise;
-    };
+      return this.model.__collection__.save(save_obj, opts, Model.wrap_callback(this.model, callback));
+    });
 
-    Query.prototype.update = function(update, opts, callback) {
-      var d;
+    Query.prototype.update = Model.defer(function(update, opts, callback) {
       if (typeof opts === 'function') {
         callback = opts;
         opts = {};
       }
-      d = q.defer();
-      this.model.__collection__.update(this.query, update, opts, promise_me(d, callback));
-      return d.promise;
-    };
+      return this.model.__collection__.update(this.query, update, opts, promise_me(d, callback));
+    });
 
-    Query.prototype.remove = function(opts, callback) {
-      var d;
+    Query.prototype.remove = Model.defer(function(opts, callback) {
       if (typeof opts === 'function') {
         callback = opts;
         opts = {};
       }
-      d = q.defer();
-      this.model.__collection__.remove(this.query, opts, promise_me(d, callback));
-      return d.promise;
-    };
+      return this.model.__collection__.remove(this.query, opts, promise_me(d, callback));
+    });
 
     return Query;
 
